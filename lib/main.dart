@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -26,9 +27,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Teech Lab.',
-      theme: ThemeData(
-        primarySwatch: Colors.brown,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blueGrey),
       home: const HomeScreen(),
     );
   }
@@ -54,9 +53,8 @@ class HomeScreen extends HookWidget {
         actions: [
           // チェックしたアイテムの絞り込み
           IconButton(
-              onPressed: () => itemListFilter.state = isObtainedFilter
-                  ? ItemListFilter.all
-                  : ItemListFilter.obtained,
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ListViewPage())),
               icon: Icon(
                 isObtainedFilter
                     ? Icons.check_circle
@@ -236,6 +234,43 @@ class ItemListError extends StatelessWidget {
                   .retrieveItems(),
               child: const Text('Retry')),
         ],
+      ),
+    );
+  }
+}
+
+class ListViewPage extends HookWidget {
+  ListViewPage({Key? key}) : super(key: key);
+  final id = FirebaseFirestore.instance.collection('users').get();
+
+final currentItem = ScopedProvider<Item>((_) => throw UnimplementedError());
+
+  @override
+  Widget build(BuildContext context) {
+    final itemListState = useProvider(itemListControllerProvider);
+    final filteredItemList = useProvider(filteredItemListProvider);
+    return itemListState.when(
+      data: (items) => items.isEmpty
+          ? const Center(
+              child: Text(
+                'Tap + to add an item',
+                style: TextStyle(fontSize: 20.0),
+              ),
+            )
+          : ListView.builder(
+              itemCount: filteredItemList.length,
+              itemBuilder: (BuildContext context, int index) {
+                final item = filteredItemList[index];
+                return ProviderScope(
+                  overrides: [currentItem.overrideWithValue(item)],
+                  // アイテムタイルの表示
+                  child: const ItemTile(),
+                );
+              }),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => ItemListError(
+        message:
+            error is CustomException ? error.message! : 'Something went wrong',
       ),
     );
   }
