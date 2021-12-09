@@ -43,7 +43,7 @@ class HomeScreen extends HookWidget {
     final isObtainedFilter = itemListFilter.state == ItemListFilter.obtained;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Campe List'),
+        title: const Text('Campe Lists'),
         leading: authControllerState != null
             ? IconButton(
                 onPressed: () =>
